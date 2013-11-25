@@ -25,6 +25,8 @@ const int redPin = 9;
 const int greenPin = 5;
 const int bluePin = 6;
 
+const int polarityCorrection = 255;  // set to 0 for common-cathode LED
+
 // commands
 const char SET_COLOR = '#';
 const char SET_BACKGROUND_COLOR = 'b';
@@ -67,9 +69,9 @@ void pulseLed() {
     in = 4.712;
   out = sin(in) * 0.5 + 0.5;
   RGB currentColor = interpolateRgbs(color, backgroundColor, out);
-  analogWrite(redPin, currentColor.r);
-  analogWrite(greenPin, currentColor.g);
-  analogWrite(bluePin, currentColor.b);
+  analogWrite(redPin, currentColor.r - polarityCorrection);
+  analogWrite(greenPin, currentColor.g - polarityCorrection);
+  analogWrite(bluePin, currentColor.b - polarityCorrection);
 }
 
 RGB interpolateRgbs (RGB rgb, RGB rgb2, float ratio){
