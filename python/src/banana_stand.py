@@ -3,39 +3,44 @@ from serial import Serial
 from jenkinsapi.jenkins import Jenkins
 
 RED = 'FF0000'
-GREEN = '00FF00'
-YELLOW = 'FFFF00'
+GREEN = 'FFFF00'
+YELLOW = '00FF00'
 BLACK = '000000'
+GRAY = '535353'
 
-def monitor(jobName, url = "http://jenkins.dev.bb.schrodinger.com"):
-    print 'watching', jobName, 'on', url
+STATUS_COLORS = {
+    'FAILURE': RED,
+    'UNSTABLE': YELLOW,
+    'SUCCESS': GREEN,
+    'ABORTED': GRAY
+}
+
+def monitorForever(url, jobName):
+    print 'watching {0} on {1}'.format(jobName, url)
+    serial = Serial('/dev/tty.usbserial-A6008lTP', 9600)
+    time.sleep(5) # time for arduino to reset
+    jenkins = Jenkins(url)
+    job = jenkins[jobName]
     while True:
-        jenkins = Jenkins(url)
-        job = jenkins[jobName]
         status = job.get_last_completed_build().get_status()
-        if status=='FAILURE':
-            color = RED
-        elif status=='UNSTABLE':
-            color = YELLOW
-        elif status=='SUCCESS':
-            color = GREEN
-        
+        print jobName, status
+        color = STATUS_COLORS[status]
         isRunning = job.is_running();
-    
-        #ser = Serial('/dev/tty.usbserial-A6008lTP', 9600)
-        #ser.write('#' + color)
-        print '#', color
+        serial.write('#{0}\n'.format(color))
         if isRunning:
-            #ser.write('b' + BLACK)
-            print 'b', BLACK
+            print '\tRUNNING'
+            serial.write('b{0}\n'.format(BLACK))
         else:
-            # no pulsing
-            #ser.write('b' + color)
-            print 'b', color
-        time.sleep(5)
-
+            serial.write('b{0}\n'.format(color))
+        time.sleep(30)
+        
+usage = "python banana_stand.py <url> <Jenkins Job Name>"
 if __name__=='__main__':
-    jobName = sys.argv[1]
-    monitor(jobName)
+    if len(sys.argv) == 1:
+        print usage
+    else:
+        url = sys.argv[1]
+        jobName = sys.argv[2]
+        monitorForever(url, jobName)
 
 

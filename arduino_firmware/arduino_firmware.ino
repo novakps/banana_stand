@@ -5,27 +5,29 @@
  * Green cathode: digital pin 5
  * blue cathode: digital pin 6
  * anode: +5V
+ *
  */
 
 #define NL 13
 #include "rgb.h"
 
 /*
- * defaults white and black with 1 second period
+ * defaults tp pulse between white and black with 1 second period
  */
 RGB color = {
   255, 255, 255};
+
 RGB backgroundColor = {
   0, 0, 0};
 
 float pulseStep = 0.001;
 
-// pins for the LEDs:
+// output pins for the LEDs:
 const int redPin = 9;
 const int greenPin = 5;
 const int bluePin = 6;
 
-const int polarityCorrection = 255;  // set to 0 for common-cathode LED
+const int POLARITY_CORRECTION = 255;
 
 // commands
 const char SET_COLOR = '#';
@@ -35,10 +37,6 @@ const char SET_RATE= 'p';
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
-int red;
-int green;
-int blue;
-int blinkRate;
 float in = 4.712;
 float out;
 
@@ -69,9 +67,9 @@ void pulseLed() {
     in = 4.712;
   out = sin(in) * 0.5 + 0.5;
   RGB currentColor = interpolateRgbs(color, backgroundColor, out);
-  analogWrite(redPin, currentColor.r - polarityCorrection);
-  analogWrite(greenPin, currentColor.g - polarityCorrection);
-  analogWrite(bluePin, currentColor.b - polarityCorrection);
+  analogWrite(redPin, POLARITY_CORRECTION - currentColor.r);
+  analogWrite(greenPin, POLARITY_CORRECTION - currentColor.g);
+  analogWrite(bluePin, POLARITY_CORRECTION - currentColor.b);
 }
 
 RGB interpolateRgbs (RGB rgb, RGB rgb2, float ratio){
@@ -82,35 +80,19 @@ RGB interpolateRgbs (RGB rgb, RGB rgb2, float ratio){
   g += ((rgb2.g) - g) * ratio;
   b += ((rgb2.b) - b) * ratio;
   return(RGB){
-    r, g, b     };
+    r, g, b    };
 }
 
 void parseCommand(String inputString) {
   switch(inputString.charAt(0)) {
   case SET_COLOR:
     color = parseColors(inputString.substring(1));
-    Serial.println("color");
-    Serial.print("  red: ");
-    Serial.println(color.r, HEX);
-    Serial.print("  green: ");
-    Serial.println(color.g, HEX);
-    Serial.print("  blue:");
-    Serial.println(color.b, HEX);
     break;
   case SET_BACKGROUND_COLOR:
     backgroundColor = parseColors(inputString.substring(1));
-        Serial.println("backgroundColor");
-    Serial.print("  red: ");
-    Serial.println(backgroundColor.r, HEX);
-    Serial.print("  green: ");
-    Serial.println(backgroundColor.g, HEX);
-    Serial.print("  blue:");
-    Serial.println(backgroundColor.b, HEX);
     break;
   case SET_RATE:
     pulseStep = parseRate(inputString.substring(1));
-    Serial.print(" pulseStep: ");
-    Serial.println(pulseStep, 8);
     break;
   default:
     Serial.println("Invalid command");
@@ -118,11 +100,11 @@ void parseCommand(String inputString) {
 }
 
 RGB parseColors(String text) {
-  red = hexToDec(text.substring(0,2));
-  green = hexToDec(text.substring(2,4));
-  blue = hexToDec(text.substring(4,6));
+  int red = hexToDec(text.substring(0,2));
+  int green = hexToDec(text.substring(2,4));
+  int blue = hexToDec(text.substring(4,6));
   return (RGB){
-    red, green, blue                };
+    red, green, blue    };
 }
 
 float parseRate(String text) {
@@ -164,6 +146,8 @@ void serialEvent() {
     }
   }
 }
+
+
 
 
 
