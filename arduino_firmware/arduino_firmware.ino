@@ -15,7 +15,7 @@
  * defaults tp pulse between white and black with 1 second period
  */
 RGB color = {
-  255, 255, 255};
+  102, 0, 102};
 
 RGB backgroundColor = {
   0, 0, 0};
